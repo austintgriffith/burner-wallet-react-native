@@ -1,0 +1,3 @@
+rootProject.name = 'burner_wallet_react_native'
+
+include ':app'

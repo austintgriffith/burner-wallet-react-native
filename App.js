@@ -1,20 +1,25 @@
 import React, { Component } from "react";
-import { Platform, View, Button, Text, StyleSheet, AsyncStorage } from "react-native";
+import {
+  Platform,
+  View,
+  Button,
+  Text,
+  StyleSheet,
+  AsyncStorage
+} from "react-native";
 import { WebView } from "react-native-webview-messaging/WebView";
-
+import QRCodeScanner from "react-native-qrcode-scanner";
 
 let customBurnerConfig = {
   isReactNative: true,
   title: "Cold Wallet",
-  extraHeadroom: 50,
-}
-
-
-
+  extraHeadroom: 50
+};
 
 export default class App extends Component {
   constructor() {
     super();
+    this.onSuccess = this.onSuccess.bind(this);
   }
 
   _refWebView = webview => {
@@ -23,40 +28,46 @@ export default class App extends Component {
 
   componentDidMount() {
     const { messagesChannel } = this.webview;
-    messagesChannel.on("json", json =>
-      console.log("RECEIVED JSON",json)
-    );
+    messagesChannel.on("json", json => console.log("RECEIVED JSON", json));
 
-    messagesChannel.on("text", async (text) => {
-      if(text=="qr"){
-        console.log("please open up the qr reader")
-      }else if(text=="burn"){
-        console.log("please burn private key")
-        await AsyncStorage.setItem('privatekey',"")
-        this.sendJsonToWebView()
+    messagesChannel.on("text", text => {
+      if (text == "qr") {
+        this.renderQRCode();
+      } else if (text == "burn") {
+        console.log("please burn private key");
+        AsyncStorage.clear();
+        this.sendJsonToWebView();
       }
     });
   }
+
+  onSuccess(e) {
+    // Send data to web from here
+    console.log(e)
+  }
+
   async sendJsonToWebView() {
-    let privatekey
-    console.log("Loading private key...")
+    let privatekey;
+    console.log("Loading private key...");
     try {
-      privatekey = await AsyncStorage.getItem('privatekey');
+      privatekey = await AsyncStorage.getItem("privatekey");
     } catch (error) {
-     // Error retrieving data
+      // Error retrieving data
     }
-    if(!privatekey){
-      console.log("generating private key...")
-      privatekey = makePrivatekey()
-      AsyncStorage.setItem('privatekey',privatekey);
+    if (!privatekey) {
+      console.log("generating private key...");
+      privatekey = makePrivatekey();
+      AsyncStorage.setItem("privatekey", privatekey);
     }
     console.log("PK:",privatekey)
     customBurnerConfig.possibleNewPrivateKey = privatekey
     this.webview.sendJSON(customBurnerConfig);
-  };
+  }
 
+  renderQRCode() {
+    return <QRCodeScanner onRead={this.onSuccess.bind(this)} />;
+  }
   render() {
-
     return (
       // <WebView
       //   source={{ uri: "https://xdai.io" }}
@@ -74,13 +85,13 @@ export default class App extends Component {
       // />
 
       <View style={{ flex: 1 }}>
-
         <WebView
-          source={{ uri: "http://localhost:3000" }}
+          source={{ uri: "https://xdai.io" }}
           style={{ flex: 1 }}
           ref={this._refWebView}
-          onLoadEnd={()=>{
-            this.sendJsonToWebView()
+          startInLoadingState={true}
+          onLoadEnd={() => {
+            this.sendJsonToWebView();
           }}
         />
       </View>

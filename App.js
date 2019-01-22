@@ -4,6 +4,7 @@ import { WebView } from "react-native-webview-messaging/WebView";
 
 
 let customBurnerConfig = {
+  isReactNative: true,
   title: "Cold Wallet",
   extraHeadroom: 50,
 }
@@ -26,17 +27,15 @@ export default class App extends Component {
       console.log("RECEIVED JSON",json)
     );
 
-    messagesChannel.on("text", text => {
+    messagesChannel.on("text", async (text) => {
       if(text=="qr"){
         console.log("please open up the qr reader")
       }else if(text=="burn"){
         console.log("please burn private key")
-        AsyncStorage.clear()
+        await AsyncStorage.setItem('privatekey',"")
         this.sendJsonToWebView()
       }
     });
-
-
   }
   async sendJsonToWebView() {
     let privatekey
@@ -51,6 +50,7 @@ export default class App extends Component {
       privatekey = makePrivatekey()
       AsyncStorage.setItem('privatekey',privatekey);
     }
+    console.log("PK:",privatekey)
     customBurnerConfig.possibleNewPrivateKey = privatekey
     this.webview.sendJSON(customBurnerConfig);
   };

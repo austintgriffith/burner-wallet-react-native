@@ -11,6 +11,7 @@ import { WebView } from "react-native-webview-messaging/WebView";
 import QRCodeScanner from "react-native-qrcode-scanner";
 
 let customBurnerConfig = {
+  isReactNative: true,
   title: "Cold Wallet",
   extraHeadroom: 50
 };
@@ -58,7 +59,8 @@ export default class App extends Component {
       privatekey = makePrivatekey();
       AsyncStorage.setItem("privatekey", privatekey);
     }
-    customBurnerConfig.possibleNewPrivateKey = privatekey;
+    console.log("PK:",privatekey)
+    customBurnerConfig.possibleNewPrivateKey = privatekey
     this.webview.sendJSON(customBurnerConfig);
   }
 
